@@ -17,3 +17,7 @@ build:
 .PHONY: fmt
 fmt:
 	$(GOFMT) -w $(GOFILES)
+
+.PHONY: imports
+imports:
+	goimports -w $(GOFILES)
