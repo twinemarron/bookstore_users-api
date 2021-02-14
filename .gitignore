@@ -19,3 +19,6 @@ go.sum
 
 # Binaries for programs and plugins
 bin/
+
+# .env file
+.env
