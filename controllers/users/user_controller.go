@@ -14,20 +14,6 @@ import (
 
 func CreateUser(c *gin.Context) {
 	var user users.User
-	// bytes, err := ioutil.ReadAll(c.Request.Body)
-	// if err != nil {
-	// 	// TODO: Handle error
-	// 	fmt.Println(err.Error())
-	// 	return
-	// }
-	// fmt.Println(user)
-	// if err := json.Unmarshal(bytes, &user); err != nil {
-	// 	// TODO: Handle json error
-	// 	fmt.Println(err.Error())
-	// 	return
-	// }
-
-	// 上記処理と同じ事を以下で行う
 	if err := c.ShouldBindJSON(&user); err != nil {
 		restErr := errors.NewBadRequestError("invalid json body")
 		c.JSON(restErr.Status, restErr)
@@ -56,4 +42,31 @@ func GetUser(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusCreated, user)
+}
+
+func UpdateUser(c *gin.Context) {
+	userId, userErr := strconv.ParseInt(c.Param("user_id"), 10, 64)
+	if userErr != nil {
+		err := errors.NewBadRequestError("user id should be a number")
+		c.JSON(err.Status, err)
+		return
+	}
+
+	var user users.User
+	if err := c.ShouldBindJSON(&user); err != nil {
+		restErr := errors.NewBadRequestError("invalid json body")
+		c.JSON(restErr.Status, restErr)
+		return
+	}
+
+	user.Id = userId
+
+	isPartial := c.Request.Method == http.MethodPatch
+
+	result, err := services.UpdateUser(isPartial, user)
+	if err != nil {
+		c.JSON(err.Status, err)
+		return
+	}
+	c.JSON(http.StatusOK, result)
 }
