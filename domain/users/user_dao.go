@@ -6,7 +6,7 @@ import (
 	"fmt"
 
 	"github.com/twinemarron/bookstore_users-api/datasources/mysql/users_db"
-	// "github.com/twinemarron/bookstore_users-api/utils/date_utils"
+	"github.com/twinemarron/bookstore_users-api/logger"
 	"github.com/twinemarron/bookstore_users-api/utils/errors"
 	"github.com/twinemarron/bookstore_users-api/utils/mysql_utils"
 )
@@ -35,14 +35,20 @@ func something() {
 func (user *User) Get() *errors.RestErr {
 	stmt, err := users_db.Client.Prepare(queryGetUser)
 	if err != nil {
-		return errors.NewInternalServerError(err.Error())
+		// エラー内容をログとして記録
+		logger.Error("error when trying to prepare get user statement", err)
+		// クライアントへ返す error message
+		return errors.NewInternalServerError("database error")
 	}
 	defer stmt.Close()
 
 	result := stmt.QueryRow(user.Id)
 
 	if getErr := result.Scan(&user.Id, &user.FirstName, &user.LastName, &user.Email, &user.DateCreated, &user.Status); getErr != nil {
-		return mysql_utils.ParseError(getErr)
+		// エラー内容をログとして記録
+		logger.Error("error when trying to get user by id", getErr)
+		// クライアントへ返す error message
+		return errors.NewInternalServerError("database error")
 	}
 	return nil
 }
@@ -50,18 +56,27 @@ func (user *User) Get() *errors.RestErr {
 func (user *User) Save() *errors.RestErr {
 	stmt, err := users_db.Client.Prepare(queryInsertUser)
 	if err != nil {
-		return errors.NewInternalServerError(err.Error())
+		// エラー内容をログとして記録
+		logger.Error("error when trying to prepare save user statement", err)
+		// クライアントへ返す error message
+		return errors.NewInternalServerError("database error")
 	}
 	defer stmt.Close()
 
 	insertResult, saveErr := stmt.Exec(user.FirstName, user.LastName, user.Email, user.DateCreated, user.Status, user.Password)
 	if saveErr != nil {
-		return mysql_utils.ParseError(saveErr)
+		// エラー内容をログとして記録
+		logger.Error("error when trying to save user by id", saveErr)
+		// クライアントへ返す error message
+		return errors.NewInternalServerError("database error")
 	}
 	userId, err := insertResult.LastInsertId()
 
 	if err != nil {
-		return mysql_utils.ParseError(saveErr)
+		// エラー内容をログとして記録
+		logger.Error("error when trying to get last insert id after creating a user", err)
+		// クライアントへ返す error message
+		return errors.NewInternalServerError("database error")
 	}
 	user.Id = userId
 	return nil
@@ -70,13 +85,19 @@ func (user *User) Save() *errors.RestErr {
 func (user *User) Update() *errors.RestErr {
 	stmt, err := users_db.Client.Prepare(queryUpdateUser)
 	if err != nil {
-		return errors.NewInternalServerError(err.Error())
+		// エラー内容をログとして記録
+		logger.Error("error when trying to prepare update user statement", err)
+		// クライアントへ返す error message
+		return errors.NewInternalServerError("database error")
 	}
 	defer stmt.Close()
 
 	_, err = stmt.Exec(user.FirstName, user.LastName, user.Email, user.Id)
 	if err != nil {
-		return mysql_utils.ParseError(err)
+		// エラー内容をログとして記録
+		logger.Error("error when trying to update user", err)
+		// クライアントへ返す error message
+		return errors.NewInternalServerError("database error")
 	}
 	return nil
 }
@@ -84,12 +105,18 @@ func (user *User) Update() *errors.RestErr {
 func (user *User) Delete() *errors.RestErr {
 	stmt, err := users_db.Client.Prepare(queryDeleteUser)
 	if err != nil {
-		return errors.NewBadRequestError(err.Error())
+		// エラー内容をログとして記録
+		logger.Error("error when trying to prepare delete user statement", err)
+		// クライアントへ返す error message
+		return errors.NewInternalServerError("database error")
 	}
 	defer stmt.Close()
 
 	if _, err = stmt.Exec(user.Id); err != nil {
-		return mysql_utils.ParseError(err)
+		// エラー内容をログとして記録
+		logger.Error("error when trying to delete user", err)
+		// クライアントへ返す error message
+		return errors.NewInternalServerError("database error")
 	}
 	return nil
 }
@@ -97,19 +124,29 @@ func (user *User) Delete() *errors.RestErr {
 func (user *User) FindByStatus(status string) (Users, *errors.RestErr) {
 	stmt, err := users_db.Client.Prepare(queryFindUserByStatus)
 	if err != nil {
-		return nil, errors.NewInternalServerError(err.Error())
+		// エラー内容をログとして記録
+		logger.Error("error when trying to prepare find users by status statement", err)
+		// クライアントへ返す error message
+		return nil, errors.NewInternalServerError("database error")
 	}
 	defer stmt.Close()
 	rows, err := stmt.Query(status)
 	if err != nil {
-		return nil, errors.NewInternalServerError(err.Error())
+		// エラー内容をログとして記録
+		logger.Error("error when trying to find users by status", err)
+		// クライアントへ返す error message
+		return nil, errors.NewInternalServerError("database error")
 	}
 	defer rows.Close()
 	results := make([]User, 0)
 	for rows.Next() {
 		var user User
 		if err := rows.Scan(&user.Id, &user.FirstName, &user.LastName, &user.Email, &user.DateCreated, &user.Status); err != nil {
-			return nil, mysql_utils.ParseError(err)
+
+			// エラー内容をログとして記録
+			logger.Error("error when scan user row into user struct", err)
+			// クライアントへ返す error message
+			return nil, errors.NewInternalServerError("database error")
 		}
 		results = append(results, user)
 	}
