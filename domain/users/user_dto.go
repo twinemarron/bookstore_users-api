@@ -1,3 +1,5 @@
+// DTO: Data Transfer Object
+// データの転送/受け渡し処理を記述する
 package users
 
 import (
@@ -20,6 +22,8 @@ type User struct {
 	Status      string `json:"status"`
 	Password    string `json:"password"`
 }
+
+type Users []User
 
 func (user *User) Validate() *errors.RestErr {
 	user.FirstName = strings.TrimSpace(user.FirstName)
