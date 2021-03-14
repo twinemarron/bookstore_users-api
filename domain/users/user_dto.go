@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/twinemarron/bookstore_users-api/utils/errors"
+	"github.com/twinemarron/bookstore_utils-go/rest_errors"
 )
 
 const (
@@ -25,17 +25,17 @@ type User struct {
 
 type Users []User
 
-func (user *User) Validate() *errors.RestErr {
+func (user *User) Validate() *rest_errors.RestErr {
 	user.FirstName = strings.TrimSpace(user.FirstName)
 	user.LastName = strings.TrimSpace(user.LastName)
 	user.Email = strings.TrimSpace(strings.ToLower(user.Email))
 	if user.Email == "" {
-		return errors.NewBadRequestError("invalid email address.")
+		return rest_errors.NewBadRequestError("invalid email address.")
 	}
 	user.Password = strings.TrimSpace(user.Password)
 	fmt.Println(user)
 	if user.Password == "" {
-		return errors.NewBadRequestError("invalid password")
+		return rest_errors.NewBadRequestError("invalid password")
 	}
 	return nil
 }
